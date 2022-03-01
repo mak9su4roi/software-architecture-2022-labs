@@ -28,6 +28,6 @@ def save_message(payload: UserMessage, ):
     rsp = remote_post(micro_config.services[ServiceName.logging], "logging_service/"
             ,payload=log.json()
     )
-    log_hook(f'FROM: {ServiceName.facade}::GET')
+    log_hook(f'FROM: {ServiceName.facade}::POST')
     log_hook(rsp)
     return rsp
