@@ -3,7 +3,10 @@ from .schemas import UserLog, HashTable, LogDump
 from app.common.hooks import log_hook
 from app.common.schemas import ServiceName
 
-logging = APIRouter(prefix="/logging_service")
+logging = APIRouter(
+    prefix="/logging_service",
+    tags=["logging"]
+)
 log = HashTable()
 
 @logging.get("/", response_model=LogDump)

@@ -3,7 +3,10 @@ from app.facade_service.api.schemas import UserMessage
 from app.common.schemas import ServiceName
 from app.common.hooks import log_hook
 
-messages = APIRouter(prefix="/messages_service")
+messages = APIRouter(
+    prefix="/messages_service",
+    tags=["messages"]
+)
 
 @messages.get("/", response_model=UserMessage)
 async def send_message():
