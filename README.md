@@ -12,6 +12,9 @@
 git clone https://github.com/mak9su4roi/software-architecture-2022-labs.git
 ```
 ```bash
+cd software-architecture-2022-labs
+```
+```bash
 git checkout micro_basics 
 ```
 ```bash
