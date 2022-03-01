@@ -1,0 +1,31 @@
+{
+    "services": {
+        "facade": {
+            "debug": true,
+            "name": "facade_service",
+            "data": {
+                "reddundancy": 1,
+                "ip": "127.0.0.1",
+                "port": 8000
+            }
+        },
+        "logging": {
+            "debug": true,
+            "name": "logging_service",
+            "data": {
+                "reddundancy": 1,
+                "ip": "127.0.0.1",
+                "port": 9000
+            }
+        },
+        "messages": {
+            "debug": true,
+            "name": "messages_service",
+            "data": {
+                "reddundancy": 1,
+                "ip": "127.0.0.1",
+                "port": 10000
+            }
+        }
+    }
+}
