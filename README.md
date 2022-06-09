@@ -2,7 +2,7 @@
 
 > Protocol
 
-### Lab II: Hazelcast intro
+### Lab III: Micro_Hazelcast
 - Author: [Maksym Bilyk](https://github.com/mak9su4roi)
 
 ---
@@ -15,74 +15,65 @@ git clone https://github.com/mak9su4roi/software-architecture-2022-labs.git
 cd software-architecture-2022-labs
 ```
 ```bash
-git checkout micro_hazelcast_intro
+git checkout micro_hazelcast
 ```
 
 ---
 
 ### Run
 
-- Part II:
+- Part I:
     - Launch a cluster
         ```bash
-        docker-compose up hz_mc
+        kubectl apply -f minikube.yaml \
+            && sleep 10 \
+            && kubectl get pods \
+            && kubectl port-forward facade 8080:8080
         ```
-        ![](media/p1.png)
+        ![](media/1.png)
 
-- Part III:
-    - Value distribution among 3 nodes
+- Part II:
+    - Send 10 messages
         ```bash
-        docker-compose run clear_map
-        docker-compose run fill_map
+        cat ./write_messages.sh \
+            && ./write_messages.sh
         ```
-        ![](media/p2_3.png)
+        ![](media/2.png)
 
-    - Value distribution among 2 nodes
+- Part III
+    - Read from 3 hazelcast nodes
         ```bash
-        docker-compose stop hz_001
+        ./read_messages.sh \
+            && kubectl logs logging-0 -c logging \
+            && kubectl logs logging-1 -c logging \
+            && kubectl logs logging-2 -c logging
         ```
-        ![](media/p2_2.png)
-    
-    - No data loss so far :)
+        ![](media/3.1.png)
+ 
+    - Read from 2 hazelcast nodes
         ```bash
-        docker-compose stop hz_002
+        kubectl scale statefulset/logging --replicas=2 \
+            && kubectl get pods \
+            && ./read_messages.sh \
+            && kubectl logs logging-0 -c logging \
+            && kubectl logs logging-1 -c logging
         ```
-        ![](media/p2_1.png)
+        ![](media/3.2.png)
+
+    - Read from 1 hazelcast node
+        ```bash
+        kubectl scale statefulset/logging --replicas=1 \
+            && kubectl get pods \
+            && ./read_messages.sh \
+            && kubectl logs logging-0 -c logging
+        ```
+        ![](media/3.3.png)
 
 - Part IV:
-    - Without Locking: dataraces occur
+    - Stop cluster
         ```bash
-        docker-compose run clear_map
-        docker-compose run map_without_locking
+        kubectl delete -f minikube.yaml \
+            && kubectl get pods
         ```
-        ![](media/p3_w.png)
+        ![](media/4.png)
 
-    - With pessimistic Locking: no dataraces occur
-        ```bash
-        docker-compose run clear_map
-        docker-compose map_pessimistic_locking
-        ```
-        ![](media/p3_p.png)
-
-    - With optimistic Locking: no dataraces occur
-        ```bash
-        docker-compose run clear_map
-        docker-compose run map_optimistic_locking
-        ```
-        ![](media/p3_o.png)
-
-- Part V:
-    - When queue is full producer is waiting to put its items
-        ```bash
-        docker-compose run clear_queue
-        docker-compose run queue_producer
-        ```
-        ![](media/p4_p.png)
-        ![](media/p4_pc.png)
-
-    - When all consumers finished their tasks there should be only one terminating item
-        ```bash
-        docker-compose run queue_consumer
-        ```
-        ![](media/p4_pcc.png)
-        ![](media/p4_pccc.png)
