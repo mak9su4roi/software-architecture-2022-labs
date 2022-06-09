@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-conf
+data:
+  logging_name: "logging"
+  logging_port: "80"
+  logging_debug: "true"
+  facade_name: "facade"
+  facade_port: "8080"
+  facade_debug: "true"
+  messages_name: "messages"
+  messages_port: "80"
+  messages_debug: "true"
+  file-from-cfgmap: |
+    hazelcast:
+      network:
+        join:
+          multicast:
+            enabled: false
+          kubernetes:
+            enabled: true
+            service-dns: hzc.default.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: facade
+spec:
+  selector:
+    app: facade
+  ports:
+    - port: 12345
+      targetPort: facade-ep
+      #nodePort: 30000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logging
+spec:
+  selector:
+    app: logging
+  ports:
+    - port: 80
+      targetPort: logging-ep
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hzc
+spec:
+  ports:
+  - port: 5701
+    name: hazelcast
+  clusterIP: None
+  selector:
+    cluster: hz
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: messages
+spec:
+  selector:
+    app: messages
+  ports:
+    - port: 80
+      targetPort: messages-ep
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: facade
+  labels:
+    app: facade
+spec:
+  containers:
+  - name: facade
+    image: mak9su4roi/facade
+    env:
+    - name: logging_name
+      valueFrom:
+        configMapKeyRef:
+          name: service-conf
+          key: logging_name
+    - name: logging_port
+      valueFrom:
+        configMapKeyRef:
+          name: service-conf
+          key: logging_port
+    - name: messages_name
+      valueFrom:
+        configMapKeyRef:
+          name: service-conf
+          key: messages_name
+    
+    - name: messages_port
+      valueFrom:
+        configMapKeyRef:
+          name: service-conf
+          key: messages_port
+    ports:
+      - containerPort: 8080
+        name: facade-ep
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logging
+  labels:
+    app: logging
+    cluster: hz
+spec:
+  serviceName: "hzc"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: logging
+      cluster: hz
+  template:
+    metadata:
+      labels:
+        app: logging
+        cluster: hz
+    spec:
+      containers:
+      - name: hz-node
+        image: hazelcast/hazelcast:5.1
+        env: 
+        - name: JAVA_OPTS
+          value: "-Dhazelcast.config=/opt/hazelcast/config-ext/hazelcast.yaml"
+        ports:
+        - containerPort: 5701
+          name: hazelcast
+        volumeMounts:
+        - mountPath: /opt/hazelcast/config-ext/hazelcast.yaml
+          name: conf-volume
+          subPath: file-from-cfgmap
+          readOnly: true
+      - name: logging
+        image: mak9su4roi/logging
+        ports:
+        - containerPort: 8080
+          name: logging-ep 
+      volumes:
+      - name: conf-volume
+        configMap:
+          name: service-conf
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: messages
+  labels:
+    app: messages
+spec:
+  containers:
+  - name: messages
+    image: mak9su4roi/messages
+    ports:
+      - containerPort: 8080
+        name: messages-ep
+

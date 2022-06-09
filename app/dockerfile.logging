@@ -1,0 +1,10 @@
+FROM python:3.10-slim
+
+COPY ./requirements.logging.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./logging/ ./app/logging/
+COPY ./common/ ./app/common/
+COPY ./api/ ./app/api/
+
+ENTRYPOINT [ "uvicorn", "app.logging:app", "--host", "0.0.0.0", "--port", "8080" ]
