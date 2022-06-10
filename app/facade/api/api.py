@@ -4,8 +4,11 @@ from app.common.schemas import ServiceName
 from app.common.messaging import remote_post, remote_get
 from app.api.facade import UserMessage
 from app.api.logging import UserLog, LogDump
+from app.api.messages import QueuePC
 from fastapi import APIRouter
 from os import environ
+
+queue = QueuePC()
 
 facade = APIRouter(
     prefix="/facade_service",
@@ -28,6 +31,7 @@ def save_message(payload: UserMessage):
     rsp = remote_post(environ["logging_name"], environ["logging_port"], "logging_service/"
             ,payload=log.json()
     )
+    queue.put(payload.txt)
     log_hook(f'FROM: {ServiceName.facade}::POST::{payload}')
     log_hook(rsp)
     return rsp
